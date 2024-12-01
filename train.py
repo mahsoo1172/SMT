@@ -16,7 +16,10 @@ def main(config_path):
     
     with open(config_path, "r") as f:
         config = experiment_config_from_dict(json.load(f))
-    
+
+    with open(config_path, "r") as f:
+        model_config = json.load(f)
+        
     datamodule = GrandStaffDataset(config=config.data)
 
     max_height, max_width = datamodule.train_set.get_max_hw()
@@ -24,8 +27,8 @@ def main(config_path):
 
     model_wrapper = SMT_Trainer(maxh=int(max_height), maxw=int(max_width), maxlen=int(max_len), 
                                 out_categories=len(datamodule.train_set.w2i), padding_token=datamodule.train_set.w2i["<pad>"], 
-                                in_channels=1, w2i=datamodule.train_set.w2i, i2w=datamodule.train_set.i2w, 
-                                d_model=256, dim_ff=256, num_dec_layers=8)
+                                in_channels=model_config['model']['in_channels'], w2i=datamodule.train_set.w2i, i2w=datamodule.train_set.i2w, 
+                                d_model=model_config['model']['d_model'], dim_ff=model_config['model']['dim_ff'], num_dec_layers=model_config['model']['num_dec_layers'])
     
     wandb_logger = WandbLogger(project='SMT_Reimplementation', group="GrandStaff", name=f"SMT_NexT_GrandStaff", log_model=False)
 
