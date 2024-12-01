@@ -33,7 +33,7 @@ class SMT_Trainer(L.LightningModule):
     def configure_optimizers(self):
         return torch.optim.Adam(list(self.model.encoder.parameters()) + list(self.model.decoder.parameters()), lr=1e-4, amsgrad=False)
     
-    def forward(self, input, last_preds) -> torch.Any:
+    def forward(self, input, last_preds) -> torch.Tensor:
         return self.model(input, last_preds)
     
     def training_step(self, batch):
