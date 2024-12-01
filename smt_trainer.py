@@ -47,20 +47,24 @@ class SMT_Trainer(L.LightningModule):
     
     def validation_step(self, val_batch):
         x, _, y = val_batch
-        predicted_sequence, _ = self.model.predict(input=x)
-        
-        dec = "".join(predicted_sequence)
-        dec = dec.replace("<t>", "\t")
-        dec = dec.replace("<b>", "\n")
-        dec = dec.replace("<s>", " ")
 
-        gt = "".join([self.model.i2w[token.item()] for token in y.squeeze(0)[:-1]])
-        gt = gt.replace("<t>", "\t")
-        gt = gt.replace("<b>", "\n")
-        gt = gt.replace("<s>", " ")
+        for i in range(x.shape[0]):
+            x_iter = x[i].unsqueeze(0)
+            y_iter = y[i].unsqueeze(0)
+            predicted_sequence, _ = self.model.predict(input=x_iter)
+            
+            dec = "".join(predicted_sequence)
+            dec = dec.replace("<t>", "\t")
+            dec = dec.replace("<b>", "\n")
+            dec = dec.replace("<s>", " ")
 
-        self.preds.append(dec)
-        self.grtrs.append(gt)
+            gt = "".join([self.model.i2w[token.item()] for token in y_iter.squeeze(0)[:-1]])
+            gt = gt.replace("<t>", "\t")
+            gt = gt.replace("<b>", "\n")
+            gt = gt.replace("<s>", " ")
+
+            self.preds.append(dec)
+            self.grtrs.append(gt)
         
     def on_validation_epoch_end(self, metric_name="val") -> None:
         cer, ser, ler = compute_poliphony_metrics(self.preds, self.grtrs)
