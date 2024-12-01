@@ -80,7 +80,7 @@ class SMT_Trainer(L.LightningModule):
         
         return ser
     
-    def test_step(self, test_batch) -> torch.Tensor | torch.Dict[str, torch.Any] | None:
+    def test_step(self, test_batch):
         return self.validation_step(test_batch)
     
     def on_test_epoch_end(self) -> None:
