@@ -1,0 +1,16 @@
+{
+    "data":{
+      "data_path": "mtruong9/gt_smt_grandstaff_random_20percent",
+      "batch_size": 16,
+      "vocab_name": "GrandStaff",
+      "img_format": ".jpg",
+      "num_workers": 8,
+      "reduce_ratio": 1.0
+    },
+    "model":{
+      "in_channels": 1,
+      "d_model": 8,
+      "dim_ff": 8,
+      "num_dec_layers": 2
+  }
+}
