@@ -132,14 +132,14 @@ class DecoderLayer(nn.Module):
         self.ff = dim_ff
 
         self.input_attention = MHA(embedding_dim=self.d_model,
-                             num_heads=4,
+                             num_heads=1,
                              proj_value=True,
                              dropout=0.5)
         
         self.norm1 = nn.LayerNorm(self.d_model)
 
         self.cross_attention = MHA(embedding_dim=self.d_model,
-                             num_heads=4,
+                             num_heads=1,
                              proj_value=True,
                              dropout=0.5)
 
