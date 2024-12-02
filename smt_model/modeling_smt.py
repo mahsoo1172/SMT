@@ -376,18 +376,59 @@ class SMTModelForCausalLM(PreTrainedModel):
         return output
         
     
+    # def predict(self, input, convert_to_str=False):
+    #     predicted_sequence = torch.from_numpy(np.asarray([self.w2i['<bos>']])).to(input.device).unsqueeze(0)
+    #     encoder_output = self.forward_encoder(input)
+    #     text_sequence = []
+    #     for i in range(self.maxlen - predicted_sequence.shape[-1]):
+    #         predictions = self.forward_decoder(encoder_output, predicted_sequence.long())
+    #         predicted_token = torch.argmax(predictions.logits[:, :, -1]).item()
+    #         predicted_sequence = torch.cat([predicted_sequence, torch.argmax(predictions.logits[:, :, -1], dim=1, keepdim=True)], dim=1)
+    #         if convert_to_str:
+    #             predicted_token = f"{predicted_token}"
+    #         if self.i2w[predicted_token] == '<eos>':
+    #             break
+    #         text_sequence.append(self.i2w[predicted_token])
+    #
+    #     return text_sequence, predictions
+
     def predict(self, input, convert_to_str=False):
-        predicted_sequence = torch.from_numpy(np.asarray([self.w2i['<bos>']])).to(input.device).unsqueeze(0)
+        batch_size = input.shape[0]
+        predicted_sequence = torch.full((batch_size, 1), self.w2i['<bos>'], device=input.device, dtype=torch.long)
         encoder_output = self.forward_encoder(input)
-        text_sequence = []
-        for i in range(self.maxlen - predicted_sequence.shape[-1]):
-            predictions = self.forward_decoder(encoder_output, predicted_sequence.long())
-            predicted_token = torch.argmax(predictions.logits[:, :, -1]).item()
-            predicted_sequence = torch.cat([predicted_sequence, torch.argmax(predictions.logits[:, :, -1], dim=1, keepdim=True)], dim=1)
-            if convert_to_str:
-                predicted_token = f"{predicted_token}"
-            if self.i2w[predicted_token] == '<eos>':
-                break
-            text_sequence.append(self.i2w[predicted_token])
-        
-        return text_sequence, predictions
+        active_samples = torch.arange(batch_size, device=input.device)  # Keep track of active samples
+        text_sequences = [[] for _ in range(batch_size)]
+        print('self maxlen', self.maxlen)
+        for i in range(self.maxlen - 1):
+            predictions = self.forward_decoder(encoder_output[active_samples], predicted_sequence[active_samples])
+            predicted_tokens = torch.argmax(predictions.logits[:, :, -1],
+                                            dim=1)  # Get predicted tokens for active samples
+            # print(f"Shape of predicted_sequence[active_samples]: {predicted_sequence[active_samples].shape}")
+            # print(f"Shape of predicted_tokens: {predicted_tokens.shape}")
+            # print(f"Shape of predicted_tokens.unsqueeze(1): {predicted_tokens.unsqueeze(1).shape}")
+            predicted_sequence = torch.cat([predicted_sequence[active_samples], predicted_tokens.unsqueeze(1)], dim=1)
+
+            # Check for <eos> token and update active samples
+            eos_indices = (predicted_tokens == self.w2i['<eos>']).nonzero()
+            # if eos_indices.nelement() > 0:
+            #     print(eos_indices)
+            #     print('eos indices nelement>0', (eos_indices.nelement() > 0))
+            if eos_indices.nelement() > 0:
+                #TODO: Active samples logic causes runtime error. Ignoring the time savings for removing individual batch samples from
+                # processing when <eos> is reached.
+                # print('active samples before', active_samples)
+                # active_samples = active_samples[~torch.isin(torch.arange(active_samples.size(0), device=input.device), eos_indices.squeeze())]
+                # print('active samples after', active_samples)
+
+                # This should still work. If ALL batch samples are done (no more empty samples), then should be okay to end early.
+                if active_samples.nelement() == 0:  # All samples have finished
+                    break
+
+            # Update text sequences for active samples
+            for j, sample_idx in enumerate(active_samples):
+                predicted_token = predicted_tokens[j].item()
+                if convert_to_str:
+                    predicted_token = f"{predicted_token}"
+                text_sequences[sample_idx.item()].append(self.i2w[predicted_token])
+
+        return text_sequences, predictions
