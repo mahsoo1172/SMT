@@ -38,8 +38,8 @@ def main(config_path):
                                    monitor="val_SER", mode='min',
                                    save_top_k=1, verbose=True)
 
-    trainer = Trainer(max_epochs=10000, 
-                      check_val_every_n_epoch=5, 
+    trainer = Trainer(max_epochs=10, #10000,
+                      check_val_every_n_epoch=1,  # 5,
                       logger=wandb_logger, callbacks=[checkpointer, early_stopping])
     
     trainer.fit(model_wrapper,datamodule=datamodule)
