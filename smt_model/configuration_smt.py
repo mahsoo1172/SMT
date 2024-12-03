@@ -5,7 +5,7 @@ class SMTConfig(PretrainedConfig):
 
     def __init__(self, maxh=3508, maxw=2480, maxlen=1512, out_categories=2512, padding_token=0, 
                  in_channels=1, w2i={}, i2w={}, out_dir="out_smt", 
-                 d_model=4, dim_ff=4, num_dec_layers=1, attn_heads=1,
+                 d_model=128, dim_ff=128, num_dec_layers=4, attn_heads=1,
                  use_flash_attn=False, **kwargs):
         self.architectures = ["SMT"]
         self.maxh = maxh
