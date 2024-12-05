@@ -16,7 +16,7 @@ class SMT_Trainer(L.LightningModule):
         self.config = SMTConfig(maxh=maxh, maxw=maxw, maxlen=maxlen, out_categories=out_categories,
                            padding_token=padding_token, in_channels=in_channels, 
                            w2i=w2i, i2w=i2w,
-                           d_model=d_model, dim_ff=dim_ff, attn_heads=1, num_dec_layers=num_dec_layers, 
+                           d_model=d_model, dim_ff=dim_ff, attn_heads=4, num_dec_layers=num_dec_layers,
                            use_flash_attn=True)
         self.model = SMTModelForCausalLM(self.config)
         self.padding_token = padding_token
@@ -45,45 +45,45 @@ class SMT_Trainer(L.LightningModule):
         return loss
         
     
-    # def validation_step(self, val_batch):
-    #     x, _, y = val_batch
-    #
-    #     for i in range(x.shape[0]):
-    #         x_iter = x[i].unsqueeze(0)
-    #         y_iter = y[i].unsqueeze(0)
-    #         predicted_sequence, _ = self.model.predict(input=x_iter)
-    #
-    #         dec = "".join(predicted_sequence)
-    #         dec = dec.replace("<t>", "\t")
-    #         dec = dec.replace("<b>", "\n")
-    #         dec = dec.replace("<s>", " ")
-    #
-    #         gt = "".join([self.model.i2w[token.item()] for token in y_iter.squeeze(0)[:-1]])
-    #         gt = gt.replace("<t>", "\t")
-    #         gt = gt.replace("<b>", "\n")
-    #         gt = gt.replace("<s>", " ")
-    #
-    #         self.preds.append(dec)
-    #         self.grtrs.append(gt)
-
-    # Use this version of validation_step() when self.model.predict() is vectorized.
     def validation_step(self, val_batch):
         x, _, y = val_batch
-        predicted_sequences, _ = self.model.predict(input=x)  # Use the updated predict() function
 
-        for i, predicted_sequence in enumerate(predicted_sequences):
+        for i in range(x.shape[0]):
+            x_iter = x[i].unsqueeze(0)
+            y_iter = y[i].unsqueeze(0)
+            predicted_sequence, _ = self.model.predict(input=x_iter)
+
             dec = "".join(predicted_sequence)
             dec = dec.replace("<t>", "\t")
             dec = dec.replace("<b>", "\n")
             dec = dec.replace("<s>", " ")
 
-            gt = "".join([self.model.i2w[token.item()] for token in y[i, :-1]])  # Get ground truth for the current sample
+            gt = "".join([self.model.i2w[token.item()] for token in y_iter.squeeze(0)[:-1]])
             gt = gt.replace("<t>", "\t")
             gt = gt.replace("<b>", "\n")
             gt = gt.replace("<s>", " ")
 
             self.preds.append(dec)
             self.grtrs.append(gt)
+
+    # Use this version of validation_step() when self.model.predict() is vectorized.
+    # def validation_step(self, val_batch):
+    #     x, _, y = val_batch
+    #     predicted_sequences, _ = self.model.predict(input=x)  # Use the updated predict() function
+    #
+    #     for i, predicted_sequence in enumerate(predicted_sequences):
+    #         dec = "".join(predicted_sequence)
+    #         dec = dec.replace("<t>", "\t")
+    #         dec = dec.replace("<b>", "\n")
+    #         dec = dec.replace("<s>", " ")
+    #
+    #         gt = "".join([self.model.i2w[token.item()] for token in y[i, :-1]])  # Get ground truth for the current sample
+    #         gt = gt.replace("<t>", "\t")
+    #         gt = gt.replace("<b>", "\n")
+    #         gt = gt.replace("<s>", " ")
+    #
+    #         self.preds.append(dec)
+    #         self.grtrs.append(gt)
 
     def on_validation_epoch_end(self, metric_name="val") -> None:
         cer, ser, ler = compute_poliphony_metrics(self.preds, self.grtrs)

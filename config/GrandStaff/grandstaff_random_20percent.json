@@ -9,8 +9,8 @@
     },
     "model":{
       "in_channels": 1,
-      "d_model": 4,
-      "dim_ff": 4,
-      "num_dec_layers": 1
+      "d_model": 128,
+      "dim_ff": 128,
+      "num_dec_layers": 4
   }
 }
