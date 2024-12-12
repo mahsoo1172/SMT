@@ -44,17 +44,35 @@ def compute_poliphony_metrics(hyp_array, gt_array):
 
     hyp_ler = []
     gt_ler = []
-    
+
     for h_string, gt_string in zip(hyp_array, gt_array):
+        # print('--------------------------------------------------------')
+        # print('h_string', h_string)
+        # print('gt_string', gt_string)
+        gt_string_remove_pad = gt_string.replace('<pad>', '').replace('<eos>', '')
+
         hyp_ler.append(parse_krn_content(h_string, ler_parsing=True, cer_parsing=False))
-        gt_ler.append(parse_krn_content(gt_string, ler_parsing=True, cer_parsing=False))
+        # gt_ler.append(parse_krn_content(gt_string, ler_parsing=True, cer_parsing=False))
+        gt_ler.append(parse_krn_content(gt_string_remove_pad, ler_parsing=True, cer_parsing=False))
 
         hyp_ser.append(parse_krn_content(h_string, ler_parsing=False, cer_parsing=False))
-        gt_ser.append(parse_krn_content(gt_string, ler_parsing=False, cer_parsing=False))
+        # gt_ser.append(parse_krn_content(gt_string, ler_parsing=False, cer_parsing=False))
+        gt_ser.append(parse_krn_content(gt_string_remove_pad, ler_parsing=False, cer_parsing=False))
 
         hyp_cer.append(parse_krn_content(h_string, ler_parsing=False, cer_parsing=True))
-        gt_cer.append(parse_krn_content(gt_string, ler_parsing=False, cer_parsing=True))
-    
+        # gt_cer.append(parse_krn_content(gt_string, ler_parsing=False, cer_parsing=True))
+        gt_cer.append(parse_krn_content(gt_string_remove_pad, ler_parsing=False, cer_parsing=True))
+        # print('-------------------------')
+        # print('pred_cer tokens:', hyp_cer)
+        # print('gt_cer tokens:', gt_cer)
+        # print('-------------------------')
+        # print('hyp_ser tokens:', hyp_ser)
+        # print('gt_ser tokens:', gt_ser)
+        # print('-------------------------')
+        # print('hyp_ler tokens:', hyp_ler)
+        # print('gt_ler tokens:', gt_ler)
+        # print('-------------------------')
+
     acc_ed_dist = 0
     acc_len = 0
 
